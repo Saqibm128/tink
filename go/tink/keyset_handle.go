@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,7 +16,8 @@ package tink
 
 import (
 	"fmt"
-	tinkpb "github.com/google/tink/proto/tink_proto"
+
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 var errKeysetHandleInvalidKeyset = fmt.Errorf("keyset_handle: invalid keyset")
@@ -30,7 +29,7 @@ type KeysetHandle struct {
 	encryptedKeyset *tinkpb.EncryptedKeyset
 }
 
-// NewKeysetHandle creates a new instance of KeysetHandle using the given keyset
+// newKeysetHandle creates a new instance of KeysetHandle using the given keyset
 // and encrypted keyset. The given keyset must not be nil. Otherwise, an error will
 // be returned.
 func newKeysetHandle(keyset *tinkpb.Keyset,
@@ -79,17 +78,18 @@ func (h *KeysetHandle) GetPublicKeysetHandle() (*KeysetHandle, error) {
 	return newKeysetHandle(pubKeyset, nil)
 }
 
-// Ketset returns the keyset component of the keyset handle.
+// Keyset returns the Keyset component of this handle.
 func (h *KeysetHandle) Keyset() *tinkpb.Keyset {
 	return h.keyset
 }
 
-// EncryptedKeyset returns the encrypted keyset component of the keyset handle.
+// EncryptedKeyset returns the EncryptedKeyset component of this handle.
 func (h *KeysetHandle) EncryptedKeyset() *tinkpb.EncryptedKeyset {
 	return h.encryptedKeyset
 }
 
-// KeysetInfo returns a KeysetInfo object that doesn't contain actual key material.
+// KeysetInfo returns a KeysetInfo of the Keyset of this handle.
+// KeysetInfo doesn't contain actual key material.
 func (h *KeysetHandle) KeysetInfo() (*tinkpb.KeysetInfo, error) {
 	return GetKeysetInfo(h.keyset)
 }
@@ -104,8 +104,6 @@ func (h *KeysetHandle) String() string {
 }
 
 func (h *KeysetHandle) validateKeyData(keyData *tinkpb.KeyData) error {
-	if _, err := Registry().GetPrimitiveFromKeyData(keyData); err != nil {
-		return err
-	}
-	return nil
+	_, err := Registry().GetPrimitiveFromKeyData(keyData)
+	return err
 }

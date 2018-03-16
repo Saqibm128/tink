@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +16,9 @@ package tink_test
 
 import (
 	"fmt"
+	"sync"
+	"testing"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/tink/go/aead"
 	"github.com/google/tink/go/mac"
@@ -25,35 +26,33 @@ import (
 	subtleMac "github.com/google/tink/go/subtle/mac"
 	"github.com/google/tink/go/testutil"
 	"github.com/google/tink/go/tink"
-	gcmpb "github.com/google/tink/proto/aes_gcm_proto"
-	commonpb "github.com/google/tink/proto/common_proto"
-	hmacpb "github.com/google/tink/proto/hmac_proto"
-	tinkpb "github.com/google/tink/proto/tink_proto"
-	"sync"
-	"testing"
+	gcmpb "github.com/google/tink/proto/aes_gcm_go_proto"
+	commonpb "github.com/google/tink/proto/common_go_proto"
+	hmacpb "github.com/google/tink/proto/hmac_go_proto"
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 func TestKeyManagerMapBasic(t *testing.T) {
 	kmMap := tink.NewKeyManagerMap()
 	// try to put a HmacKeyManager
 	hmacManager := mac.NewHmacKeyManager()
-	typeUrl := mac.HMAC_TYPE_URL
-	kmMap.Put(typeUrl, hmacManager)
-	tmp, existed := kmMap.Get(typeUrl)
+	typeURL := mac.HmacTypeURL
+	kmMap.Put(typeURL, hmacManager)
+	tmp, existed := kmMap.Get(typeURL)
 	if !existed {
 		t.Errorf("a HmacKeyManager should be found")
 	}
 	var _ = tmp.(*mac.HmacKeyManager)
 	// Get type url that doesn't exist
-	if _, existed := kmMap.Get("some url"); existed == true {
-		t.Errorf("unknown typeUrl shouldn't exist in the map")
+	if _, existed := kmMap.Get("some url"); existed {
+		t.Errorf("unknown typeURL shouldn't exist in the map")
 	}
 }
 
 func TestKeyManagerMapConcurrency(t *testing.T) {
 	kmMap := tink.NewKeyManagerMap()
 	n := 100
-	urlPrefix := "typeUrl#"
+	urlPrefix := "typeURL#"
 	// put
 	var wg sync.WaitGroup
 	wg.Add(n)
@@ -97,13 +96,13 @@ func TestKeyManagerRegistration(t *testing.T) {
 	// register mac and aead types.
 	setupRegistryTests()
 	// get HmacKeyManager
-	km, err = tink.Registry().GetKeyManager(mac.HMAC_TYPE_URL)
+	km, err = tink.Registry().GetKeyManager(mac.HmacTypeURL)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 	var _ *mac.HmacKeyManager = km.(*mac.HmacKeyManager)
 	// get AesGcmKeyManager
-	km, err = tink.Registry().GetKeyManager(aead.AES_GCM_TYPE_URL)
+	km, err = tink.Registry().GetKeyManager(aead.AesGcmTypeURL)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -117,14 +116,14 @@ func TestKeyManagerRegistration(t *testing.T) {
 func TestKeyManagerRegistrationWithCollision(t *testing.T) {
 	// register mac and aead types.
 	setupRegistryTests()
-	// dummyKeyManager's typeUrl is equal to that of AesGcm
+	// dummyKeyManager's typeURL is equal to that of AesGcm
 	var dummyKeyManager tink.KeyManager = new(testutil.DummyAeadKeyManager)
 	// this should not overwrite the existing manager.
 	ok, err := tink.Registry().RegisterKeyManager(dummyKeyManager)
-	if ok == true || err != nil {
+	if ok || err != nil {
 		t.Errorf("AES_GCM_TYPE_URL shouldn't be registered again")
 	}
-	km, err := tink.Registry().GetKeyManager(aead.AES_GCM_TYPE_URL)
+	km, err := tink.Registry().GetKeyManager(aead.AesGcmTypeURL)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -138,7 +137,7 @@ func TestNewKeyData(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
-	if keyData.TypeUrl != mac.HMAC_TYPE_URL {
+	if keyData.TypeUrl != mac.HmacTypeURL {
 		t.Errorf("invalid key data")
 	}
 	key := new(hmacpb.HmacKey)
@@ -152,7 +151,7 @@ func TestNewKeyData(t *testing.T) {
 	// unregistered type url
 	template := &tinkpb.KeyTemplate{TypeUrl: "some url", Value: []byte{0}}
 	if _, err := tink.Registry().NewKeyData(template); err == nil {
-		t.Errorf("expect an error when key template contains unregistered typeUrl")
+		t.Errorf("expect an error when key template contains unregistered typeURL")
 	}
 }
 
@@ -187,7 +186,7 @@ func TestNewKeyFromKeyFormat(t *testing.T) {
 	setupRegistryTests()
 	// use aes-gcm key format
 	format := aead.NewAesGcmKeyFormat(16)
-	key, err := tink.Registry().NewKeyFromKeyFormat(aead.AES_GCM_TYPE_URL, format)
+	key, err := tink.Registry().NewKeyFromKeyFormat(aead.AesGcmTypeURL, format)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -197,14 +196,14 @@ func TestNewKeyFromKeyFormat(t *testing.T) {
 	}
 	// unregistered url
 	if _, err := tink.Registry().NewKeyFromKeyFormat("some url", format); err == nil {
-		t.Errorf("expect an error when typeUrl has not been registered")
+		t.Errorf("expect an error when typeURL has not been registered")
 	}
 	// unmatched url
-	if _, err := tink.Registry().NewKeyFromKeyFormat(mac.HMAC_TYPE_URL, format); err == nil {
-		t.Errorf("expect an error when typeUrl doesn't match format")
+	if _, err := tink.Registry().NewKeyFromKeyFormat(mac.HmacTypeURL, format); err == nil {
+		t.Errorf("expect an error when typeURL doesn't match format")
 	}
 	// nil format
-	if _, err := tink.Registry().NewKeyFromKeyFormat(mac.HMAC_TYPE_URL, nil); err == nil {
+	if _, err := tink.Registry().NewKeyFromKeyFormat(mac.HmacTypeURL, nil); err == nil {
 		t.Errorf("expect an error when format is nil")
 	}
 }
@@ -213,21 +212,21 @@ func TestGetPrimitiveFromKey(t *testing.T) {
 	setupRegistryTests()
 	// hmac key
 	key := testutil.NewHmacKey(commonpb.HashType_SHA256, 16)
-	p, err := tink.Registry().GetPrimitiveFromKey(mac.HMAC_TYPE_URL, key)
+	p, err := tink.Registry().GetPrimitiveFromKey(mac.HmacTypeURL, key)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 	var _ *subtleMac.Hmac = p.(*subtleMac.Hmac)
 	// unregistered url
 	if _, err := tink.Registry().GetPrimitiveFromKey("some url", key); err == nil {
-		t.Errorf("expect an error when typeUrl has not been registered")
+		t.Errorf("expect an error when typeURL has not been registered")
 	}
 	// unmatched url
-	if _, err := tink.Registry().GetPrimitiveFromKey(aead.AES_GCM_TYPE_URL, key); err == nil {
-		t.Errorf("expect an error when typeUrl doesn't match key")
+	if _, err := tink.Registry().GetPrimitiveFromKey(aead.AesGcmTypeURL, key); err == nil {
+		t.Errorf("expect an error when typeURL doesn't match key")
 	}
 	// nil key
-	if _, err := tink.Registry().GetPrimitiveFromKey(aead.AES_GCM_TYPE_URL, nil); err == nil {
+	if _, err := tink.Registry().GetPrimitiveFromKey(aead.AesGcmTypeURL, nil); err == nil {
 		t.Errorf("expect an error when key is nil")
 	}
 }
@@ -244,12 +243,12 @@ func TestGetPrimitiveFromKeyData(t *testing.T) {
 	// unregistered url
 	keyData.TypeUrl = "some url"
 	if _, err := tink.Registry().GetPrimitiveFromKeyData(keyData); err == nil {
-		t.Errorf("expect an error when typeUrl has not been registered")
+		t.Errorf("expect an error when typeURL has not been registered")
 	}
 	// unmatched url
-	keyData.TypeUrl = aead.AES_GCM_TYPE_URL
+	keyData.TypeUrl = aead.AesGcmTypeURL
 	if _, err := tink.Registry().GetPrimitiveFromKeyData(keyData); err == nil {
-		t.Errorf("expect an error when typeUrl doesn't match key")
+		t.Errorf("expect an error when typeURL doesn't match key")
 	}
 	// nil
 	if _, err := tink.Registry().GetPrimitiveFromKeyData(nil); err == nil {
@@ -262,27 +261,27 @@ func TestGetPrimitiveFromSerializedKey(t *testing.T) {
 	// hmac key
 	key := testutil.NewHmacKey(commonpb.HashType_SHA256, 16)
 	serializedKey, _ := proto.Marshal(key)
-	p, err := tink.Registry().GetPrimitiveFromSerializedKey(mac.HMAC_TYPE_URL, serializedKey)
+	p, err := tink.Registry().GetPrimitiveFromSerializedKey(mac.HmacTypeURL, serializedKey)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 	var _ *subtleMac.Hmac = p.(*subtleMac.Hmac)
 	// unregistered url
 	if _, err := tink.Registry().GetPrimitiveFromSerializedKey("some url", serializedKey); err == nil {
-		t.Errorf("expect an error when typeUrl has not been registered")
+		t.Errorf("expect an error when typeURL has not been registered")
 	}
 	// unmatched url
-	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AES_GCM_TYPE_URL, serializedKey); err == nil {
-		t.Errorf("expect an error when typeUrl doesn't match key")
+	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AesGcmTypeURL, serializedKey); err == nil {
+		t.Errorf("expect an error when typeURL doesn't match key")
 	}
 	// void key
-	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AES_GCM_TYPE_URL, nil); err == nil {
+	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AesGcmTypeURL, nil); err == nil {
 		t.Errorf("expect an error when key is nil")
 	}
-	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AES_GCM_TYPE_URL, []byte{}); err == nil {
+	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AesGcmTypeURL, []byte{}); err == nil {
 		t.Errorf("expect an error when key is nil")
 	}
-	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AES_GCM_TYPE_URL, []byte{0}); err == nil {
+	if _, err := tink.Registry().GetPrimitiveFromSerializedKey(aead.AesGcmTypeURL, []byte{0}); err == nil {
 		t.Errorf("expect an error when key is nil")
 	}
 }

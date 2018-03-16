@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,12 +15,13 @@
 package signature_test
 
 import (
+	"testing"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/tink/go/signature"
 	subtleSig "github.com/google/tink/go/subtle/signature"
 	"github.com/google/tink/go/testutil"
-	commonpb "github.com/google/tink/proto/common_proto"
-	"testing"
+	commonpb "github.com/google/tink/proto/common_go_proto"
 )
 
 func TestNewEcdsaVerifyKeyManager(t *testing.T) {
@@ -58,17 +57,17 @@ func TestEcdsaVerifyGetPrimitiveWithInvalidInput(t *testing.T) {
 	for i := 0; i < len(testParams); i++ {
 		key := testutil.NewEcdsaPrivateKey(testParams[i].hashType, testParams[i].curve)
 		if _, err := km.GetPrimitiveFromKey(key); err == nil {
-			t.Errorf("expect an error in test case %d")
+			t.Errorf("expect an error in test case %d", i)
 		}
 		serializedKey, _ := proto.Marshal(key)
 		if _, err := km.GetPrimitiveFromSerializedKey(serializedKey); err == nil {
-			t.Errorf("expect an error in test case %d")
+			t.Errorf("expect an error in test case %d", i)
 		}
 	}
 	// invalid version
 	key := testutil.NewEcdsaPublicKey(commonpb.HashType_SHA256,
 		commonpb.EllipticCurveType_NIST_P256)
-	key.Version = signature.ECDSA_VERIFY_KEY_VERSION + 1
+	key.Version = signature.EcdsaVerifyKeyVersion + 1
 	if _, err := km.GetPrimitiveFromKey(key); err == nil {
 		t.Errorf("expect an error when version is invalid")
 	}

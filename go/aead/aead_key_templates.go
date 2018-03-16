@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,8 +16,8 @@ package aead
 
 import (
 	"github.com/golang/protobuf/proto"
-	gcmpb "github.com/google/tink/proto/aes_gcm_proto"
-	tinkpb "github.com/google/tink/proto/tink_proto"
+	gcmpb "github.com/google/tink/proto/aes_gcm_go_proto"
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 // This file contains pre-generated KeyTemplate for Aead keys. One can use these templates
@@ -45,7 +43,7 @@ func createAesGcmKeyTemplate(keySize uint32) *tinkpb.KeyTemplate {
 	}
 	serializedFormat, _ := proto.Marshal(format)
 	return &tinkpb.KeyTemplate{
-		TypeUrl: AES_GCM_TYPE_URL,
+		TypeUrl: AesGcmTypeURL,
 		Value:   serializedFormat,
 	}
 }

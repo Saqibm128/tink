@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,8 +18,6 @@ import (
 	"encoding/asn1"
 	"fmt"
 )
-
-var errInvalidLength = fmt.Errorf("invalid length")
 
 // asn1encode encodes the given ECDSA signature using ASN.1 encoding.
 func asn1encode(sig *EcdsaSignature) ([]byte, error) {

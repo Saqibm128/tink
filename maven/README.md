@@ -1,5 +1,8 @@
-To build, run:
+# To publish snapshots of Tink and apps
 
 ```shell
-./build.sh
+./maven/publish-snapshot.sh
 ```
+
+Snapshots are also automatically published for every new commit to
+the master branch of https://github.com/google/tink.

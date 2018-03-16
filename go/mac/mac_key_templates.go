@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +16,9 @@ package mac
 
 import (
 	"github.com/golang/protobuf/proto"
-	commonpb "github.com/google/tink/proto/common_proto"
-	hmacpb "github.com/google/tink/proto/hmac_proto"
-	tinkpb "github.com/google/tink/proto/tink_proto"
+	commonpb "github.com/google/tink/proto/common_go_proto"
+	hmacpb "github.com/google/tink/proto/hmac_go_proto"
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 // This file contains pre-generated KeyTemplate for MAC.
@@ -57,7 +55,7 @@ func createHmacKeyTemplate(keySize uint32,
 	}
 	serializedFormat, _ := proto.Marshal(&format)
 	return &tinkpb.KeyTemplate{
-		TypeUrl: HMAC_TYPE_URL,
+		TypeUrl: HmacTypeURL,
 		Value:   serializedFormat,
 	}
 }

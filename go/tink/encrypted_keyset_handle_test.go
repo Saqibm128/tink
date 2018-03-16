@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,21 +16,22 @@ package tink_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/google/tink/go/aead"
 	"github.com/google/tink/go/mac"
 	"github.com/google/tink/go/testutil"
 	"github.com/google/tink/go/tink"
-	tinkpb "github.com/google/tink/proto/tink_proto"
-	"testing"
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 func setupEncryptedKeysetHandleTest() {
 	if _, err := aead.Config().RegisterStandardKeyTypes(); err != nil {
-		panic(fmt.Sprintln("cannot register aead key types: %s", err))
+		panic(fmt.Sprintf("cannot register aead key types: %s", err))
 	}
 	if _, err := mac.Config().RegisterStandardKeyTypes(); err != nil {
-		panic(fmt.Sprintln("cannot register mac key types: %s", err))
+		panic(fmt.Sprintf("cannot register mac key types: %s", err))
 	}
 }
 

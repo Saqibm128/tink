@@ -21,7 +21,8 @@ set -e
 # Display commands to stderr.
 set -x
 
-cd github/tink/
+# Change to repo root
+cd git*/tink
 
 source ./kokoro/run_tests.sh
 
@@ -33,8 +34,7 @@ time ${BAZEL_BIN} test \
 //java:src/test/java/com/google/crypto/tink/subtle/AesGcmJceTest \
 //java:src/test/java/com/google/crypto/tink/subtle/AesGcmHkdfStreamingTest
 
-# On Linux, run all Maven tests and generate jars
+# On Linux, run all Maven tests and upload snapshot jars
 if [[ $PLATFORM == 'linux' ]]; then
-  cd maven
-  time mvn package
+  ./maven/publish-snapshot.sh
 fi

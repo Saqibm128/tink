@@ -1,5 +1,3 @@
-// Copyright 2017 Google Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +16,9 @@ package signature
 
 import (
 	"github.com/golang/protobuf/proto"
-	commonpb "github.com/google/tink/proto/common_proto"
-	ecdsapb "github.com/google/tink/proto/ecdsa_proto"
-	tinkpb "github.com/google/tink/proto/tink_proto"
+	commonpb "github.com/google/tink/proto/common_go_proto"
+	ecdsapb "github.com/google/tink/proto/ecdsa_go_proto"
+	tinkpb "github.com/google/tink/proto/tink_go_proto"
 )
 
 // This file contains pre-generated KeyTemplate for PublicKeySign and PublicKeyVerify.
@@ -66,7 +64,7 @@ func createEcdsaKeyTemplate(hashType commonpb.HashType,
 	format := NewEcdsaKeyFormat(params)
 	serializedFormat, _ := proto.Marshal(format)
 	return &tinkpb.KeyTemplate{
-		TypeUrl: ECDSA_SIGN_TYPE_URL,
+		TypeUrl: EcdsaSignTypeURL,
 		Value:   serializedFormat,
 	}
 }
